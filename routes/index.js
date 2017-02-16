@@ -25,7 +25,8 @@ router.post(config.routes.start, function (req, res) {
     var data = {
         color: config.snake.color,
         name: config.snake.name,
-        taunt: config.snake.taunt.start
+        taunt: config.snake.taunt.start,
+        head_url: config.snake.head_url
     };
     return res.json(data);
 });
