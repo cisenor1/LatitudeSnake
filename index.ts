@@ -1,7 +1,7 @@
 let  config = require( './config.json');
 import * as  bodyParser from 'body-parser';
 import * as  express from 'express';
-import * as  logger from 'morgan';
+// import * as  logger from 'morgan';
 import * as  routes  from './routes';
 import {BetterError} from './utilities/utilities';
 let app = express();
@@ -12,7 +12,7 @@ app.set('port', (process.env.PORT || config.port));
 
 app.enable('verbose errors');
 
-app.use(logger('dev'));
+// app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(routes);
 
