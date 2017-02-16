@@ -1,0 +1,22 @@
+{
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "files.exclude": {
+        "**/.git": true,
+        "**/.gitignore": true,
+        "**/.nvmrc": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.env":true, 
+        "**/.DS_Store": true,
+        "**/*.jsx":true,
+        "compiled":true,
+        "dist":true,
+        "node_modules":true,
+        "config":true,
+        "Procfile":true,
+        "app.json":true,
+        "/**/*.js": true
+    }
+
+
+}

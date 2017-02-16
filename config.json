@@ -1,0 +1,21 @@
+{
+  "host": "localhost", 
+  "port": 9001,
+  "routes": {
+    "info": "/",
+    "start": "/start",
+    "move": "/move",
+    "end": "/end"
+  },
+  "snake" : {
+    "name": "Latitude Snake",
+    "color": "#ff0000",
+    "head_url": "https://lh3.googleusercontent.com/YGqr3CRLm45jMF8eM8eQxc1VSERDTyzkv1CIng0qjcenJZxqV5DBgH5xlRTawnqNPcOp=w300-rw",
+    "taunt": {
+      "state": "This is latitude's state.",
+      "move": "Latitude is moving!",
+      "start": "Latitude is starting.",
+      "end": "Latitude is dead."
+    }
+  }
+}
