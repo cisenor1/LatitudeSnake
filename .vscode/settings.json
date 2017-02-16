@@ -3,7 +3,7 @@
     "files.exclude": {
         "**/.git": true,
         "**/.gitignore": true,
-        "**/.nvmrc": true,
+        "**/.nvmrc": false,
         "**/.svn": true,
         "**/.hg": true,
         "**/.env":true, 
