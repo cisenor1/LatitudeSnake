@@ -1,3 +1,5 @@
+import {Snake} from "../Models/snake";
+
 export class BetterError extends Error {
     status: number;
 }
@@ -37,19 +39,7 @@ export interface Point{
     y:number;
 }
 /** Slithering monster. */
-export interface Snake{
-    /** Coordinates of this snake. */
-    coords: Point[];
-    /** Health of this snake. */
-    health_points:number;
-    /** ID of this snake. */
-    id:string;
-    /** Name of this snake. */
-    name:string;
-    /** This snake's current taunt. */
-    taunt:string;
 
-}
 /** Content passed with a "/move" request. */
 export interface MoveContent{
     /** Mapping of the whole board. */
