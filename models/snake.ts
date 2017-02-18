@@ -17,8 +17,7 @@ export class Snake {
     width: number;
     currentBoard: BoardCell[][];
     food: Point[];
-    constructor(height: number, width: number) {
-        console.log("In constructor. h:" + height + ", w: " + width);
+    constructor(height: number, width: number) { 
         this.height = height;
         this.width = width;
         this.initBoard();
@@ -76,8 +75,7 @@ export class Snake {
         })
     }
 
-    drawBoard() {
-        console.log("Drawing:");
+    drawBoard() { 
         let out = "";
         for (var x = 0; x < this.height; x++) {
             for (var y = 0; y < this.height; y++) {
@@ -174,8 +172,7 @@ export class Snake {
             return Directions.random();
         }
         let hor = food[0] - this.head[0];
-        let vert = food[1] - this.head[1];
-        console.log(hor, vert); 
+        let vert = food[1] - this.head[1]; 
             if (hor > 0) {
                 return Directions.RIGHT;
             }
@@ -191,23 +188,32 @@ export class Snake {
     }
 
     findClearNeighbor():string{
-        let n = this.getNeighbors();
-        console.log("Neighbor Object is ", n)
+        let n = this.getNeighbors(); 
+        let validOptions = [];
         for (var p in Directions){
-            let dir = n[p.toLocaleLowerCase()];
-            console.log(p.toLocaleLowerCase())
-            console.log("In findClearNeighbor, ", dir)
+            let dir = n[p.toLocaleLowerCase()]; 
             if (!dir){
                 continue;
             }
             if (dir.state != BoardCellContent.EMPTY && dir.state != BoardCellContent.FOOD){
                 continue;
             }
-            console.log("Was blocked, used ", p);
-            return p.toLocaleLowerCase();
+            validOptions.push(p.toLocaleLowerCase());
         }
+        if (!validOptions.length){
             console.log("Found Nothing! ");
-    }
+            return "down";
+        }
+        if (validOptions.length == 1){
+            let opt = validOptions[0];
+            console.log("No choice, going ", opt);
+            return opt;
+        }
+        console.log(validOptions);
+        let opt = validOptions[Math.floor(Math.random() *  validOptions.length)];
+        console.log("Picked ", opt, " at random");
+        return opt;
+}
 
     getNextMove(): string {
         if (this.neighboringFood()) {

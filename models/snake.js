@@ -2,7 +2,6 @@
 var utilities_1 = require("../utilities/utilities");
 var Snake = (function () {
     function Snake(height, width) {
-        console.log("In constructor. h:" + height + ", w: " + width);
         this.height = height;
         this.width = width;
         this.initBoard();
@@ -56,7 +55,6 @@ var Snake = (function () {
         });
     };
     Snake.prototype.drawBoard = function () {
-        console.log("Drawing:");
         var out = "";
         for (var x = 0; x < this.height; x++) {
             for (var y = 0; y < this.height; y++) {
@@ -149,7 +147,6 @@ var Snake = (function () {
         }
         var hor = food[0] - this.head[0];
         var vert = food[1] - this.head[1];
-        console.log(hor, vert);
         if (hor > 0) {
             return utilities_1.Directions.RIGHT;
         }
@@ -165,21 +162,30 @@ var Snake = (function () {
     };
     Snake.prototype.findClearNeighbor = function () {
         var n = this.getNeighbors();
-        console.log("Neighbor Object is ", n);
+        var validOptions = [];
         for (var p in utilities_1.Directions) {
             var dir = n[p.toLocaleLowerCase()];
-            console.log(p.toLocaleLowerCase());
-            console.log("In findClearNeighbor, ", dir);
             if (!dir) {
                 continue;
             }
             if (dir.state != utilities_1.BoardCellContent.EMPTY && dir.state != utilities_1.BoardCellContent.FOOD) {
                 continue;
             }
-            console.log("Was blocked, used ", p);
-            return p.toLocaleLowerCase();
+            validOptions.push(p.toLocaleLowerCase());
         }
-        console.log("Found Nothing! ");
+        if (!validOptions.length) {
+            console.log("Found Nothing! ");
+            return "down";
+        }
+        if (validOptions.length == 1) {
+            var opt_1 = validOptions[0];
+            console.log("No choice, going ", opt_1);
+            return opt_1;
+        }
+        console.log(validOptions);
+        var opt = validOptions[Math.floor(Math.random() * validOptions.length)];
+        console.log("Picked ", opt, " at random");
+        return opt;
     };
     Snake.prototype.getNextMove = function () {
         if (this.neighboringFood()) {

@@ -16,8 +16,7 @@ router.get(config.routes.info, function (req, res) {
 });
 // Handle POST request to '/start'
 router.post(config.routes.start, function (req, res) {
-    // Do something here to start the game
-    console.log(req.body.game_id);
+    // Do something here to start the game 
     config.game_id = req.body.game_id;
     config.width = req.body.width;
     config.height = req.body.height;
@@ -47,7 +46,6 @@ router.post(config.routes.move, function (req, res) {
         move: move_1.getMove(board, req.body),
         taunt: config.snake.taunt.move
     };
-    console.log(data);
     return res.json(data);
 });
 // Handle POST request to '/end'
