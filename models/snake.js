@@ -165,16 +165,21 @@ var Snake = (function () {
     };
     Snake.prototype.findClearNeighbor = function () {
         var n = this.getNeighbors();
+        console.log("Neighbor Object is ", n);
         for (var p in utilities_1.Directions) {
-            var dir = n[p];
+            var dir = n[p.toLocaleLowerCase()];
+            console.log(p.toLocaleLowerCase());
+            console.log("In findClearNeighbor, ", dir);
             if (!dir) {
                 continue;
             }
             if (dir.state != utilities_1.BoardCellContent.EMPTY && dir.state != utilities_1.BoardCellContent.FOOD) {
                 continue;
             }
-            return dir;
+            console.log("Was blocked, used ", p);
+            return p.toLocaleLowerCase();
         }
+        console.log("Found Nothing! ");
     };
     Snake.prototype.getNextMove = function () {
         if (this.neighboringFood()) {

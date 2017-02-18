@@ -192,16 +192,21 @@ export class Snake {
 
     findClearNeighbor():string{
         let n = this.getNeighbors();
+        console.log("Neighbor Object is ", n)
         for (var p in Directions){
-            let dir = n[p];
+            let dir = n[p.toLocaleLowerCase()];
+            console.log(p.toLocaleLowerCase())
+            console.log("In findClearNeighbor, ", dir)
             if (!dir){
                 continue;
             }
             if (dir.state != BoardCellContent.EMPTY && dir.state != BoardCellContent.FOOD){
                 continue;
             }
-            return dir;
+            console.log("Was blocked, used ", p);
+            return p.toLocaleLowerCase();
         }
+            console.log("Found Nothing! ");
     }
 
     getNextMove(): string {
