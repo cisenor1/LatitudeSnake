@@ -1,8 +1,8 @@
 "use strict";
 var config = require('./config.json');
-var bodyParser = require("body-parser");
-var express = require("express");
-// import * as  logger from 'morgan';
+var logger = require('morgan');
+var express = require('express');
+var bodyParser = require('body-parser');
 var routes = require("./routes");
 var utilities_1 = require("./utilities/utilities");
 var app = express();
@@ -10,7 +10,7 @@ app.set('port', (process.env.PORT || config.port));
 // For deployment to Heroku, the port needs to be set using ENV, so
 // we check for the port number in process.env before going to config.
 app.enable('verbose errors');
-// app.use(logger('dev'));
+app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(routes);
 app.use('*', function (req, res, next) {
@@ -31,8 +31,8 @@ app.use('*', function (req, res, next) {
 });
 // 404 handler middleware, respond with JSON only
 app.use(function (err, req, res, next) {
+    console.log("In Use");
     if (err.status !== 404) {
-        console.log("Not a 404");
         return next(err);
     }
     res.status(404);

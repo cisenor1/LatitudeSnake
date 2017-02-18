@@ -17,6 +17,7 @@ export class Directions {
     ];
     static random(): string {
         let r =(Math.floor(Math.random() * 10) % 4); 
+        console.log(this.allDirs[r]);
         return this.allDirs[r];
     }
 }
@@ -26,6 +27,7 @@ export class BoardCellContent{
     static BODY = "body";
     static FOOD = "food";
     static EMPTY = "empty";
+    static WALL = "wall";
 }
 export interface BoardCell{
     /** The content of the current cell. One of: head, body, food, empty. */

@@ -1,18 +1,17 @@
 import {getMove} from "./move";
+import {Snake} from "../models/snake";
 import * as  express from 'express';
+declare var require,module;
 var router  = express.Router();
 var config  = require('../config.json');
-
+var board;
 // Handle GET request to '/'
 router.get(config.routes.info, function (req, res) {
-  // Response data
-  console.log("Get /")
+  // Response data 
   var data = {
     color: config.snake.color,
     head_url: config.snake.head_url
-  };
-  console.log(data);
-
+  }; 
   return res.json(data);
 });
 
@@ -23,6 +22,7 @@ router.post(config.routes.start, function (req, res) {
   config.game_id = req.body.game_id;
   config.width = req.body.width;
   config.height = req.body.height;
+  board = new Snake(config.height, config.width);
   // Response data
   var data = {
     color: config.snake.color,
@@ -38,19 +38,20 @@ router.post(config.routes.start, function (req, res) {
 router.post(config.routes.move, function (req, res) {
   // Do something here to generate your move
 
-  // Response data
+  // Response data 
   var data = {
-    move: getMove(req.body), // one of: ["north", "east", "south", "west"]
+    move: getMove(board, req.body), // one of: ["north", "east", "south", "west"]
     taunt: config.snake.taunt.move
   };
-
+  console.log(data);
   return res.json(data);
 });
 
 // Handle POST request to '/end'
 router.post(config.routes.end, function (req, res) {
   // Do something here to end your snake's session
-
+  console.log ("Ended");
+  board = null;
   // We don't need a response so just send back a 200
   res.status(200);
   res.end();

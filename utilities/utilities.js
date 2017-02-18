@@ -17,6 +17,7 @@ var Directions = (function () {
     }
     Directions.random = function () {
         var r = (Math.floor(Math.random() * 10) % 4);
+        console.log(this.allDirs[r]);
         return this.allDirs[r];
     };
     return Directions;
@@ -42,4 +43,5 @@ BoardCellContent.HEAD = "head";
 BoardCellContent.BODY = "body";
 BoardCellContent.FOOD = "food";
 BoardCellContent.EMPTY = "empty";
+BoardCellContent.WALL = "wall";
 exports.BoardCellContent = BoardCellContent;
