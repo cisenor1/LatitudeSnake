@@ -25,7 +25,7 @@ router.post(config.routes.start, function (req, res) {
   board = new Snake(config.height, config.width);
   // Response data
   var data = {
-    color: config.snake.color,
+    color: getRandomColor(),
     name: config.snake.name,
     taunt: config.snake.taunt.start,
     head_url: config.snake.head_url
@@ -33,6 +33,15 @@ router.post(config.routes.start, function (req, res) {
 
   return res.json(data);
 });
+
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 // Handle POST request to '/move'
 router.post(config.routes.move, function (req, res) {
