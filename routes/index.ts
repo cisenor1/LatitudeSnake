@@ -1,5 +1,5 @@
 import {getMove} from "./move";
-import {Snake} from "../models/snake";
+import {Board} from "../models/snake";
 import * as  express from 'express';
 declare var require,module;
 var router  = express.Router();
@@ -21,7 +21,7 @@ router.post(config.routes.start, function (req, res) {
   config.game_id = req.body.game_id;
   config.width = req.body.width;
   config.height = req.body.height;
-  board = new Snake(config.height, config.width);
+  board = new Board(config.height, config.width);
   // Response data
   var data = {
     color: getRandomColor(),

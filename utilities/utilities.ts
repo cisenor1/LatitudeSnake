@@ -1,4 +1,4 @@
-import {Snake} from "../Models/snake";
+import {Board} from "../Models/snake";
 
 export class BetterError extends Error {
     status: number;
@@ -53,7 +53,7 @@ export interface MoveContent{
     /** ID string of the current game. Guaranteed to be unique. */
     game_id: string;
     /** All snakes on the board. */
-    snakes: Snake[];
+    snakes: Board[];
     /** Turn number. */
     turn: number;
     /** Width of game board. */

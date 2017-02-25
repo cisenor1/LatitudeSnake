@@ -1,6 +1,8 @@
+///<reference path="../node_modules/typescript-astar-master/js/astar.d.ts"/>
 import { MoveContent, Point, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
+import {astar} from "astar";
 
-export class Snake {
+export class Board {
     /** Coordinates of this snake. */
     coords: Point[];
     /** Health of this snake. */
@@ -16,7 +18,9 @@ export class Snake {
     height: number;
     width: number;
     currentBoard: BoardCell[][];
-    food: Point[];
+    food: Point[]; 
+    astar = new astar();
+
     constructor(height: number, width: number) { 
         this.height = height;
         this.width = width;
@@ -37,6 +41,26 @@ export class Snake {
         }
     }
 
+    private getAstarBoard(){
+        let weightedBoard = [];
+        for (let y = 0; y<this.height; y++){
+            for(let x = 0; x < this.width; x++){
+                if (y == 0) {
+                    weightedBoard[x] = [];
+                }
+                let cell = this.currentBoard[x][y];
+                let weightedCell;
+                if (cell.state == BoardCellContent.WALL || cell.snake){
+                    weightedCell = astar.GraphNodeType.WALL;
+                }else{
+                    weightedCell = 1;
+                }
+                weightedBoard[x][y] = weightedCell;
+            }
+        }
+        return weightedBoard;
+    }
+
     private clearBoard() {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -47,6 +71,10 @@ export class Snake {
         }
     }
 
+    private getPath(){
+        
+    }
+
     private setBoardCell(point: Point, state: string, snake?: string): void {
         if (point[0] > this.width || point[0] < 0 || point[1] > this.height || point[1] < 0) {
             throw new Error("Invalid grid space.");
@@ -55,7 +83,7 @@ export class Snake {
         this.currentBoard[point[0]][point[1]].snake = snake;
     }
 
-    addSnakesToBoard(snakes: Snake[]): void {
+    addSnakesToBoard(snakes: Board[]): void {
         snakes.forEach((snake) => {
             snake.coords.forEach((pt, i) => {
                 if (i == 0) {
@@ -216,6 +244,8 @@ export class Snake {
 }
 
     getNextMove(): string {
+        console.log(this.getAstarBoard());
+
         if (this.neighboringFood()) {
             return this.neighboringFood();
         }

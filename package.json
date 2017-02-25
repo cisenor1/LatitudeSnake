@@ -12,8 +12,10 @@
     }
   ],
   "dependencies": {
+    "astar": "0.0.1",
     "body-parser": "^1.14.1",
     "express": "*",
+    "javascript-astar": "^0.4.1",
     "morgan": "^1.6.1",
     "nodemon": "*"
   },
@@ -28,5 +30,4 @@
   "scripts": {
     "start": "node index.js"
   }
-  
 }
