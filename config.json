@@ -9,7 +9,7 @@
   },
   "snake" : {
     "name": "Latitude Snake",
-    "color": "#ff0000",
+    "color": "#389142",
     "head_url": "http://icons.iconarchive.com/icons/ph03nyx/super-mario/256/Retro-Mario-2-icon.png",
     "taunt": {
       "state": "This is latitude's state.",

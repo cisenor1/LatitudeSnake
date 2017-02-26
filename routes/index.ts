@@ -4,7 +4,7 @@ import * as  express from 'express';
 declare var require, module;
 var router = express.Router();
 var config = require('../config.json');
-var board;
+var board; 
 // Handle GET request to '/'
 router.get(config.routes.info, function (req, res) {
   // Response data 
@@ -24,7 +24,7 @@ router.post(config.routes.start, function (req, res) {
   board = new Board(config.height, config.width); 
   // Response data
   var data = {
-    color: getRandomColor(),
+    color: config.snake.color,
     name: config.snake.name,
     taunt: config.snake.taunt.start,
     head_url: config.snake.head_url

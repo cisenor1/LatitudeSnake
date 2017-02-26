@@ -23,7 +23,7 @@ router.post(config.routes.start, function (req, res) {
     board = new board_1.Board(config.height, config.width);
     // Response data
     var data = {
-        color: getRandomColor(),
+        color: config.snake.color,
         name: config.snake.name,
         taunt: config.snake.taunt.start,
         head_url: config.snake.head_url
