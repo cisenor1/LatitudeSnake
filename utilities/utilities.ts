@@ -1,4 +1,4 @@
-import {Board} from "../Models/snake";
+import {Board} from "../Models/board";
 
 export class BetterError extends Error {
     status: number;
@@ -34,12 +34,7 @@ export interface BoardCell{
     state: string;
     /** The ID of the snake currently contained in that board cell. */
     snake?: string;
-}
-/** Any point on the board. */
-export interface Point{
-    x:number;
-    y:number;
-}
+} 
 /** Slithering monster. */
 
 /** Content passed with a "/move" request. */
@@ -47,7 +42,7 @@ export interface MoveContent{
     /** Mapping of the whole board. */
     board: BoardCell[][];
     /** Location of all the food on the board. */
-    food: Point[];
+    food: number[][];
     /** Height of the game board. */
     height: number;
     /** ID string of the current game. Guaranteed to be unique. */

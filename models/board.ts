@@ -1,10 +1,8 @@
-///<reference path="../node_modules/typescript-astar-master/js/astar.d.ts"/>
-import { MoveContent, Point, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
-import {astar} from "astar";
-
+import { MoveContent, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
+import { astar, Graph } from "javascript-astar";
 export class Board {
     /** Coordinates of this snake. */
-    coords: Point[];
+    coords: number[][];
     /** Health of this snake. */
     health_points: number;
     /** ID of this snake. */
@@ -14,14 +12,14 @@ export class Board {
     /** This snake's current taunt. */
     taunt: string;
 
-    head: Point;
+    head: number[];
     height: number;
     width: number;
     currentBoard: BoardCell[][];
-    food: Point[]; 
-    astar = new astar();
+    foodList: number[][];
+    private astarBoard: Graph;
 
-    constructor(height: number, width: number) { 
+    constructor(height: number, width: number) {
         this.height = height;
         this.width = width;
         this.initBoard();
@@ -41,24 +39,24 @@ export class Board {
         }
     }
 
-    private getAstarBoard(){
+    private updateAStarBoard() {
         let weightedBoard = [];
-        for (let y = 0; y<this.height; y++){
-            for(let x = 0; x < this.width; x++){
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
                 if (y == 0) {
                     weightedBoard[x] = [];
                 }
                 let cell = this.currentBoard[x][y];
                 let weightedCell;
-                if (cell.state == BoardCellContent.WALL || cell.snake){
-                    weightedCell = astar.GraphNodeType.WALL;
-                }else{
+                if (cell.state == BoardCellContent.WALL || cell.snake) {
+                    weightedCell = 0;
+                } else {
                     weightedCell = 1;
                 }
                 weightedBoard[x][y] = weightedCell;
             }
         }
-        return weightedBoard;
+        this.astarBoard = new Graph(weightedBoard);
     }
 
     private clearBoard() {
@@ -71,11 +69,7 @@ export class Board {
         }
     }
 
-    private getPath(){
-        
-    }
-
-    private setBoardCell(point: Point, state: string, snake?: string): void {
+    private setBoardCell(point: number[], state: string, snake?: string): void {
         if (point[0] > this.width || point[0] < 0 || point[1] > this.height || point[1] < 0) {
             throw new Error("Invalid grid space.");
         }
@@ -96,44 +90,27 @@ export class Board {
         });
     }
 
-    addFoodToBoard(food: Point[]) {
-        this.food = food;
+    addFoodToBoard(food: number[][]) {
+        this.foodList = food;
         food.forEach((f) => {
             this.setBoardCell(f, BoardCellContent.FOOD);
         })
     }
 
-    drawBoard() { 
-        let out = "";
-        for (var x = 0; x < this.height; x++) {
-            for (var y = 0; y < this.height; y++) {
-                let state = this.currentBoard[y][x].state;
-                if (state == BoardCellContent.EMPTY) {
-                    state = " ";
-                }
-                out += state.charAt(0);
-            }
-            out += "\n";
-        }
-        console.log(out);
-    }
 
     setContentBody(body: MoveContent) {
         this.clearBoard();
         let snakes = body.snakes;
         this.addSnakesToBoard(snakes);
         this.addFoodToBoard(body.food);
-        // this.drawBoard();
         this.id = body.you;
         let thisSnakes = body.snakes.filter((s) => { return s.id == this.id; });
-        if (!thisSnakes.length) {
-            throw new Error("NoSnake");
-        }
         let thisSnake = thisSnakes[0];
         this.head = thisSnake.coords[0];
         // console.log("Finished Body",thisSnake);
         this.coords = thisSnake.coords;
         this.health_points = thisSnake.health_points;
+        this.updateAStarBoard();
     }
 
     private isItOnTheBoard(x: number, y: number) {
@@ -195,67 +172,113 @@ export class Board {
     }
 
     moveTowardsFood(dodge = false) {
-        let food = this.food[0];
+        let food = this.foodList[0];
         if (!food) {
             return Directions.random();
         }
         let hor = food[0] - this.head[0];
-        let vert = food[1] - this.head[1]; 
-            if (hor > 0) {
-                return Directions.RIGHT;
-            }
-            if (hor < 0) {
-                return Directions.LEFT;
-            }
-            if (vert < 0) {
-                return Directions.UP;
-            }
-            if (vert > 0) {
-                return Directions.DOWN;
-            } 
+        let vert = food[1] - this.head[1];
+        if (hor > 0) {
+            return Directions.RIGHT;
+        }
+        if (hor < 0) {
+            return Directions.LEFT;
+        }
+        if (vert < 0) {
+            return Directions.UP;
+        }
+        if (vert > 0) {
+            return Directions.DOWN;
+        }
     }
 
-    findClearNeighbor():string{
-        let n = this.getNeighbors(); 
+    findClearNeighbor(): string {
+        let n = this.getNeighbors();
         let validOptions = [];
-        for (var p in Directions){
-            let dir = n[p.toLocaleLowerCase()]; 
-            if (!dir){
+        for (var p in Directions) {
+            let dir = n[p.toLocaleLowerCase()];
+            if (!dir) {
                 continue;
             }
-            if (dir.state != BoardCellContent.EMPTY && dir.state != BoardCellContent.FOOD){
+            if (dir.state != BoardCellContent.EMPTY && dir.state != BoardCellContent.FOOD) {
                 continue;
             }
             validOptions.push(p.toLocaleLowerCase());
         }
-        if (!validOptions.length){
+        if (!validOptions.length) {
             console.log("Found Nothing! ");
             return "down";
         }
-        if (validOptions.length == 1){
+        if (validOptions.length == 1) {
             let opt = validOptions[0];
             console.log("No choice, going ", opt);
             return opt;
         }
         console.log(validOptions);
-        let opt = validOptions[Math.floor(Math.random() *  validOptions.length)];
+        let opt = validOptions[Math.floor(Math.random() * validOptions.length)];
         console.log("Picked ", opt, " at random");
         return opt;
-}
+    }
 
     getNextMove(): string {
-        console.log(this.getAstarBoard());
-
-        if (this.neighboringFood()) {
-            return this.neighboringFood();
+        let food = this.getFoodNode();
+        let head = this.getHeadNode();
+        let out = astar.search(this.astarBoard, head, food);
+        if (!out.length) {
+            console.log(out);
+            throw new Error("No path");
         }
-
-        let move = this.moveTowardsFood();
-        let target = this.getNeighbors()[move];
-        if (target.state != BoardCellContent.EMPTY && target.state != BoardCellContent.FOOD) {
-            return this.findClearNeighbor();
-        }
+        let nextSpot = out[0];
+        let move = this.getDirectionFromGridElement(nextSpot.x, nextSpot.y);
         return move;
+    }
+
+    private getFoodNode() {
+        let foodX = this.foodList[0][0];
+        let foodY = this.foodList[0][1];
+        console.log("Getting Food:",foodX,foodY,this.astarBoard);
+        return this.astarBoard.grid[foodX][foodY];
+    }
+
+    private getHeadNode(){
+        let headX = this.head[0];
+        let headY = this.head[1];
+        console.log("Getting Head:",headX,headY,this.astarBoard);
+        return this.astarBoard.grid[headX][headY];
+    }
+
+
+    private getDirectionFromGridElement(x: number, y: number): string {
+        let headx = this.head[0];
+        let heady = this.head[1];
+        let xdif = x- headx;
+        let ydif = y - heady;
+        let absX = Math.abs(xdif);
+        let absY = Math.abs(ydif);
+        console.log(headx,heady,xdif,ydif,absX,absY);
+        if (xdif == 0) {
+            if (ydif == 0) {
+                throw new Error("Food cannot be on your head!");
+            }
+            if (ydif < 0) {
+                return Directions.UP;
+            } else if (ydif > 0) {
+                return Directions.DOWN;
+            }
+        } else if (ydif == 0) {
+            if (xdif == 0) {
+                throw new Error("Food cannot be on your head!");
+            }
+            if (xdif < 0) {
+                return Directions.LEFT;
+            } else if (xdif > 0) {
+                return Directions.RIGHT;
+            }
+        } else if (xdif > 0) {
+            return Directions.RIGHT;
+        } else if (xdif < 0) {
+            return Directions.LEFT;
+        }
     }
 
 }

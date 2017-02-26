@@ -1,9 +1,9 @@
-import {getMove} from "./move";
-import {Board} from "../models/snake";
+import { getMove } from "./move";
+import { Board } from "../models/board";
 import * as  express from 'express';
-declare var require,module;
-var router  = express.Router();
-var config  = require('../config.json');
+declare var require, module;
+var router = express.Router();
+var config = require('../config.json');
 var board;
 // Handle GET request to '/'
 router.get(config.routes.info, function (req, res) {
@@ -11,7 +11,7 @@ router.get(config.routes.info, function (req, res) {
   var data = {
     color: config.snake.color,
     head_url: config.snake.head_url
-  }; 
+  };
   return res.json(data);
 });
 
@@ -22,6 +22,7 @@ router.post(config.routes.start, function (req, res) {
   config.width = req.body.width;
   config.height = req.body.height;
   board = new Board(config.height, config.width);
+  console.log("Created Board");
   // Response data
   var data = {
     color: getRandomColor(),
@@ -34,12 +35,12 @@ router.post(config.routes.start, function (req, res) {
 });
 
 function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-        color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
 }
 
 // Handle POST request to '/move'
@@ -47,17 +48,21 @@ router.post(config.routes.move, function (req, res) {
   // Do something here to generate your move
 
   // Response data 
-  var data = {
-    move: getMove(board, req.body), // one of: ["north", "east", "south", "west"]
-    taunt: config.snake.taunt.move
-  }; 
-  return res.json(data);
+  try {
+    var data = {
+      move: getMove(board, req.body), // one of: ["north", "east", "south", "west"]
+      taunt: config.snake.taunt.move
+    };
+    return res.json(data);
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 // Handle POST request to '/end'
 router.post(config.routes.end, function (req, res) {
   // Do something here to end your snake's session
-  console.log ("Ended");
+  console.log("Ended");
   board = null;
   // We don't need a response so just send back a 200
   res.status(200);

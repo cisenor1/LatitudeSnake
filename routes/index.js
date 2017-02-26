@@ -1,6 +1,6 @@
 "use strict";
 var move_1 = require("./move");
-var snake_1 = require("../models/snake");
+var board_1 = require("../models/board");
 var express = require("express");
 var router = express.Router();
 var config = require('../config.json');
@@ -20,7 +20,8 @@ router.post(config.routes.start, function (req, res) {
     config.game_id = req.body.game_id;
     config.width = req.body.width;
     config.height = req.body.height;
-    board = new snake_1.Snake(config.height, config.width);
+    board = new board_1.Board(config.height, config.width);
+    console.log("Created Board");
     // Response data
     var data = {
         color: getRandomColor(),
@@ -42,11 +43,16 @@ function getRandomColor() {
 router.post(config.routes.move, function (req, res) {
     // Do something here to generate your move
     // Response data 
-    var data = {
-        move: move_1.getMove(board, req.body),
-        taunt: config.snake.taunt.move
-    };
-    return res.json(data);
+    try {
+        var data = {
+            move: move_1.getMove(board, req.body),
+            taunt: config.snake.taunt.move
+        };
+        return res.json(data);
+    }
+    catch (err) {
+        console.log(err);
+    }
 });
 // Handle POST request to '/end'
 router.post(config.routes.end, function (req, res) {
