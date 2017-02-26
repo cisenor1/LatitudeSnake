@@ -3,6 +3,7 @@ var utilities_1 = require("../utilities/utilities");
 var javascript_astar_1 = require("javascript-astar");
 var Board = (function () {
     function Board(height, width) {
+        this.turn = 0;
         this.UP = [0, -1];
         this.DOWN = [0, 1];
         this.LEFT = [-1, 0];
@@ -26,6 +27,7 @@ var Board = (function () {
     };
     Board.prototype.updateAStarBoard = function () {
         var weightedBoard = [];
+        this.turn++;
         for (var y = 0; y < this.height; y++) {
             for (var x = 0; x < this.width; x++) {
                 if (y == 0) {

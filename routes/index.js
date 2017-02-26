@@ -47,16 +47,17 @@ router.post(config.routes.move, function (req, res) {
             move: move_1.getMove(board, req.body),
             taunt: config.snake.taunt.move
         };
+        console.log(board.turn);
         return res.json(data);
     }
     catch (err) {
-        console.log(err, board.ids);
+        console.log(err, board.id, board.turn);
     }
 });
 // Handle POST request to '/end'
 router.post(config.routes.end, function (req, res) {
     // Do something here to end your snake's session
-    console.log("Ended");
+    console.log("Ended at turn:", board.turn);
     board = null;
     // We don't need a response so just send back a 200
     res.status(200);

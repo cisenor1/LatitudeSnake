@@ -11,6 +11,7 @@ export class Board {
     name: string;
     /** This snake's current taunt. */
     taunt: string;
+    turn = 0;
 
     head: number[];
     height: number;
@@ -45,6 +46,7 @@ export class Board {
 
     private updateAStarBoard() {
         let weightedBoard = [];
+        this.turn++;
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (y == 0) {
