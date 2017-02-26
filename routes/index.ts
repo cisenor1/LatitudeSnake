@@ -47,17 +47,17 @@ router.post(config.routes.move, function (req, res) {
   // Do something here to generate your move
 
   // Response data 
+  try {
   let taunt;
   if (board.turn < 100){
-    taunt = config.taunt.move["0"];
+    taunt = config.snake.taunt.move["0"];
   }else if (board.turn < 250){
-    taunt = config.taunt.move["100"];
+    taunt = config.snake.taunt.move["100"];
   }else if (board.turn < 500){
-    taunt = config.taunt.move["250"];
+    taunt = config.snake.taunt.move["250"];
   }else if (board.turn >= 500){
-    taunt = config.taunt.move["500"];
+    taunt = config.snake.taunt.move["500"];
   }
-  try {
     var data = {
       move: getMove(board, req.body), // one of: ["north", "east", "south", "west"]
       taunt: taunt

@@ -42,20 +42,20 @@ function getRandomColor() {
 router.post(config.routes.move, function (req, res) {
     // Do something here to generate your move
     // Response data 
-    var taunt;
-    if (board.turn < 100) {
-        taunt = config.taunt.move["0"];
-    }
-    else if (board.turn < 250) {
-        taunt = config.taunt.move["100"];
-    }
-    else if (board.turn < 500) {
-        taunt = config.taunt.move["250"];
-    }
-    else if (board.turn >= 500) {
-        taunt = config.taunt.move["500"];
-    }
     try {
+        var taunt = void 0;
+        if (board.turn < 100) {
+            taunt = config.snake.taunt.move["0"];
+        }
+        else if (board.turn < 250) {
+            taunt = config.snake.taunt.move["100"];
+        }
+        else if (board.turn < 500) {
+            taunt = config.snake.taunt.move["250"];
+        }
+        else if (board.turn >= 500) {
+            taunt = config.snake.taunt.move["500"];
+        }
         var data = {
             move: move_1.getMove(board, req.body),
             taunt: taunt
