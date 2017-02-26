@@ -47,12 +47,21 @@ router.post(config.routes.move, function (req, res) {
   // Do something here to generate your move
 
   // Response data 
+  let taunt;
+  if (board.turn < 100){
+    taunt = config.taunt.move["0"];
+  }else if (board.turn < 250){
+    taunt = config.taunt.move["100"];
+  }else if (board.turn < 500){
+    taunt = config.taunt.move["250"];
+  }else if (board.turn >= 500){
+    taunt = config.taunt.move["500"];
+  }
   try {
     var data = {
       move: getMove(board, req.body), // one of: ["north", "east", "south", "west"]
-      taunt: config.snake.taunt.move
-    };
-    console.log(board.turn);
+      taunt: taunt
+    }; 
     return res.json(data);
   } catch (err) {
     console.log(err, board.id, board.turn);
