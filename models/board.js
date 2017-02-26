@@ -3,6 +3,10 @@ var utilities_1 = require("../utilities/utilities");
 var javascript_astar_1 = require("javascript-astar");
 var Board = (function () {
     function Board(height, width) {
+        this.UP = [0, -1];
+        this.DOWN = [0, 1];
+        this.LEFT = [-1, 0];
+        this.RIGHT = [1, 0];
         this.height = height;
         this.width = width;
         this.initBoard();
@@ -85,7 +89,6 @@ var Board = (function () {
         var thisSnakes = body.snakes.filter(function (s) { return s.id == _this.id; });
         var thisSnake = thisSnakes[0];
         this.head = thisSnake.coords[0];
-        // console.log("Finished Body",thisSnake);
         this.coords = thisSnake.coords;
         this.health_points = thisSnake.health_points;
         this.updateAStarBoard();
@@ -177,42 +180,67 @@ var Board = (function () {
             }
             validOptions.push(p.toLocaleLowerCase());
         }
+        var opt;
+        console.log("Valid Options:", validOptions);
         if (!validOptions.length) {
-            console.log("Found Nothing! ");
-            return "down";
+            opt = utilities_1.Directions.DOWN;
         }
-        if (validOptions.length == 1) {
-            var opt_1 = validOptions[0];
-            console.log("No choice, going ", opt_1);
-            return opt_1;
+        else {
+            opt = validOptions[Math.floor(Math.random() * validOptions.length)];
         }
-        console.log(validOptions);
-        var opt = validOptions[Math.floor(Math.random() * validOptions.length)];
-        console.log("Picked ", opt, " at random");
         return opt;
+    };
+    Board.prototype.getNode = function (dir) {
+        var headX = this.head[0];
+        var headY = this.head[1];
+        switch (dir) {
+            case utilities_1.Directions.UP:
+                return [
+                    headX + this.UP[0],
+                    headY + this.UP[1]
+                ];
+            case utilities_1.Directions.DOWN:
+                return [
+                    headX + this.DOWN[0],
+                    headY + this.DOWN[1]
+                ];
+            case utilities_1.Directions.LEFT:
+                return [
+                    headX + this.LEFT[0],
+                    headY + this.LEFT[1]
+                ];
+            case utilities_1.Directions.RIGHT:
+                return [
+                    headX + this.RIGHT[0],
+                    headY + this.RIGHT[1]
+                ];
+        }
     };
     Board.prototype.getNextMove = function () {
         var food = this.getFoodNode();
         var head = this.getHeadNode();
         var out = javascript_astar_1.astar.search(this.astarBoard, head, food);
-        if (!out.length) {
-            console.log(out);
-            throw new Error("No path");
-        }
         var nextSpot = out[0];
+        if (!nextSpot) {
+            console.log("Found no valid path. Searching for open neighbor.");
+            var secondTryDir = this.findClearNeighbor();
+            if (!secondTryDir) {
+                console.log("Still Nothing");
+                return utilities_1.Directions.DOWN;
+            }
+            return secondTryDir;
+        }
         var move = this.getDirectionFromGridElement(nextSpot.x, nextSpot.y);
         return move;
     };
     Board.prototype.getFoodNode = function () {
         var foodX = this.foodList[0][0];
         var foodY = this.foodList[0][1];
-        console.log("Getting Food:", foodX, foodY, this.astarBoard);
         return this.astarBoard.grid[foodX][foodY];
     };
     Board.prototype.getHeadNode = function () {
         var headX = this.head[0];
         var headY = this.head[1];
-        console.log("Getting Head:", headX, headY, this.astarBoard);
         return this.astarBoard.grid[headX][headY];
     };
     Board.prototype.getDirectionFromGridElement = function (x, y) {
@@ -222,7 +250,6 @@ var Board = (function () {
         var ydif = y - heady;
         var absX = Math.abs(xdif);
         var absY = Math.abs(ydif);
-        console.log(headx, heady, xdif, ydif, absX, absY);
         if (xdif == 0) {
             if (ydif == 0) {
                 throw new Error("Food cannot be on your head!");

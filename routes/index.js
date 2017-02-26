@@ -21,7 +21,6 @@ router.post(config.routes.start, function (req, res) {
     config.width = req.body.width;
     config.height = req.body.height;
     board = new board_1.Board(config.height, config.width);
-    console.log("Created Board");
     // Response data
     var data = {
         color: getRandomColor(),
@@ -51,7 +50,7 @@ router.post(config.routes.move, function (req, res) {
         return res.json(data);
     }
     catch (err) {
-        console.log(err);
+        console.log(err, board.ids);
     }
 });
 // Handle POST request to '/end'

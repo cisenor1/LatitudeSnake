@@ -18,6 +18,10 @@ export class Board {
     currentBoard: BoardCell[][];
     foodList: number[][];
     private astarBoard: Graph;
+    private UP = [0, -1];
+    private DOWN = [0, 1];
+    private LEFT = [-1, 0];
+    private RIGHT = [1, 0];
 
     constructor(height: number, width: number) {
         this.height = height;
@@ -107,7 +111,6 @@ export class Board {
         let thisSnakes = body.snakes.filter((s) => { return s.id == this.id; });
         let thisSnake = thisSnakes[0];
         this.head = thisSnake.coords[0];
-        // console.log("Finished Body",thisSnake);
         this.coords = thisSnake.coords;
         this.health_points = thisSnake.health_points;
         this.updateAStarBoard();
@@ -205,30 +208,59 @@ export class Board {
             }
             validOptions.push(p.toLocaleLowerCase());
         }
+        let opt;
+        console.log("Valid Options:", validOptions);
         if (!validOptions.length) {
-            console.log("Found Nothing! ");
-            return "down";
+            opt = Directions.DOWN;
+        } else {
+            opt = validOptions[Math.floor(Math.random() * validOptions.length)];
         }
-        if (validOptions.length == 1) {
-            let opt = validOptions[0];
-            console.log("No choice, going ", opt);
-            return opt;
-        }
-        console.log(validOptions);
-        let opt = validOptions[Math.floor(Math.random() * validOptions.length)];
-        console.log("Picked ", opt, " at random");
         return opt;
+
+    }
+
+    private getNode(dir: string) {
+        let headX = this.head[0];
+        let headY = this.head[1];
+
+        switch (dir) {
+            case Directions.UP:
+                return [
+                    headX + this.UP[0],
+                    headY + this.UP[1]
+                ]
+            case Directions.DOWN:
+                return [
+                    headX + this.DOWN[0],
+                    headY + this.DOWN[1]
+                ]
+            case Directions.LEFT:
+                return [
+                    headX + this.LEFT[0],
+                    headY + this.LEFT[1]
+                ]
+            case Directions.RIGHT:
+                return [
+                    headX + this.RIGHT[0],
+                    headY + this.RIGHT[1]
+                ]
+        }
     }
 
     getNextMove(): string {
         let food = this.getFoodNode();
         let head = this.getHeadNode();
         let out = astar.search(this.astarBoard, head, food);
-        if (!out.length) {
-            console.log(out);
-            throw new Error("No path");
-        }
         let nextSpot = out[0];
+        if (!nextSpot) {
+            console.log("Found no valid path. Searching for open neighbor.");
+            let secondTryDir = this.findClearNeighbor();
+            if (!secondTryDir) {
+                console.log("Still Nothing");
+                return Directions.DOWN;
+            }
+            return secondTryDir;
+        }
         let move = this.getDirectionFromGridElement(nextSpot.x, nextSpot.y);
         return move;
     }
@@ -236,14 +268,12 @@ export class Board {
     private getFoodNode() {
         let foodX = this.foodList[0][0];
         let foodY = this.foodList[0][1];
-        console.log("Getting Food:",foodX,foodY,this.astarBoard);
         return this.astarBoard.grid[foodX][foodY];
     }
 
-    private getHeadNode(){
+    private getHeadNode() {
         let headX = this.head[0];
         let headY = this.head[1];
-        console.log("Getting Head:",headX,headY,this.astarBoard);
         return this.astarBoard.grid[headX][headY];
     }
 
@@ -251,11 +281,10 @@ export class Board {
     private getDirectionFromGridElement(x: number, y: number): string {
         let headx = this.head[0];
         let heady = this.head[1];
-        let xdif = x- headx;
+        let xdif = x - headx;
         let ydif = y - heady;
         let absX = Math.abs(xdif);
         let absY = Math.abs(ydif);
-        console.log(headx,heady,xdif,ydif,absX,absY);
         if (xdif == 0) {
             if (ydif == 0) {
                 throw new Error("Food cannot be on your head!");
