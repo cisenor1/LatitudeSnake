@@ -1,5 +1,5 @@
 import { MoveContent, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
-import { astar, Graph } from "../javascript-astar-master/astar";
+import { astar, Graph } from "javascript-astar-master";
 export class Board {
     /** Coordinates of this snake. */
     coords: number[][];
@@ -13,11 +13,14 @@ export class Board {
     taunt: string;
     turn = 0;
 
+    LOOPING_LENGTH = 1;
     head: number[];
     height: number;
     width: number;
     currentBoard: BoardCell[][];
     foodList: number[][];
+    otherSnake;
+    avoidFood: boolean = false;
     private astarBoard: Graph;
     private UP = [0, -1];
     private DOWN = [0, 1];
@@ -44,7 +47,7 @@ export class Board {
         }
     }
 
-    private updateAStarBoard() {
+    private updateAStarBoard(avoidFood: boolean = false) {
         let weightedBoard = [];
         this.turn++;
         for (let y = 0; y < this.height; y++) {
@@ -54,7 +57,7 @@ export class Board {
                 }
                 let cell = this.currentBoard[x][y];
                 let weightedCell;
-                if (cell.state == BoardCellContent.WALL || cell.snake) {
+                if (cell.state == BoardCellContent.WALL || cell.snake || (avoidFood && cell.state == BoardCellContent.FOOD)) {
                     weightedCell = 0;
                 } else {
                     weightedCell = 1;
@@ -110,11 +113,13 @@ export class Board {
         this.addSnakesToBoard(snakes);
         this.addFoodToBoard(body.food);
         this.id = body.you;
-        let thisSnakes = body.snakes.filter((s) => { return s.id == this.id; });
-        let thisSnake = thisSnakes[0];
+        let allSnakes = body.snakes.filter((s) => { return s.id == this.id; });
+        let thisSnake = allSnakes[0];
         this.head = thisSnake.coords[0];
         this.coords = thisSnake.coords;
         this.health_points = thisSnake.health_points;
+        this.otherSnake = body.snakes.filter((s) => { return s.id != this.id; })[0];
+        this.otherSnake.head = this.otherSnake.coords[0];
         this.updateAStarBoard();
     }
 
@@ -167,13 +172,13 @@ export class Board {
 
     neighboringFood(): string {
         let n = this.getNeighbors();
-        let out = null;
+        let ourDirections = null;
         for (let p in n) {
             if (n[p].state == BoardCellContent.FOOD) {
-                out = p;
+                ourDirections = p;
             }
         }
-        return out;
+        return ourDirections;
     }
 
     moveTowardsFood(dodge = false) {
@@ -211,7 +216,7 @@ export class Board {
             validOptions.push(p.toLocaleLowerCase());
         }
         let opt;
-        console.log("Valid Options:", validOptions);
+        //console.log("Valid Options:", validOptions);
         if (!validOptions.length) {
             opt = Directions.DOWN;
         } else {
@@ -249,22 +254,131 @@ export class Board {
         }
     }
 
+    weGotLastFood(): boolean {
+        return
+    }
+
+    /*
+        get their head.
+        who gets the next food.
+        if us, determine if we should loop, or eat
+            if we got the last food: yes // our health > their health
+            if (canCircle)    // not on edge, this.len  > loopleng
+                loop
+        if Looping, 
+            how for to do loop:
+                get food location, 
+                build a grid around it,
+                if our leng < 9, hug 1 square radius
+
+
+    */
+
     getNextMove(): string {
         let food = this.getFoodNode();
         let head = this.getHeadNode();
-        let out = astar.search(this.astarBoard, head, food);
-        let nextSpot = out[0];
+        let enemy = this.getEnemyHead();
+        let ourDirections = astar.search(this.astarBoard, head, food);
+        let theirDirections = astar.search(this.astarBoard, enemy, food);
+        if (this.areWeCloser(ourDirections, theirDirections)) {
+            let newPath = this.shouldWeLoop(ourDirections, theirDirections);
+            if (newPath) {
+                console.log("Planning on looping: " + newPath.length.toString());
+                if (newPath.length == 0){
+                    console.log("MOM! WERE LOOPING!");
+                } 
+                this.getOldMove(newPath);
+            }
+            return this.getOldMove(ourDirections)
+        } else {
+            //console.log("ShouldNotFood");
+            return this.getOldMove(ourDirections);
+        }
+    }
+
+    private isOnBorder(inCoords) {
+        let x = inCoords[0];
+        let y = inCoords[1];
+        if (x == this.width - 1 || x == 0) {
+            return true;
+        }
+        if (y == this.height - 1 || y == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    shouldWeLoop(ourDirections, theirDirections) {
+        if (this.coords.length < this.LOOPING_LENGTH) {
+            return false;
+        }
+        let food = this.foodList[0];
+        if (this.health_points < this.otherSnake.health_points){
+            return false;
+        }
+
+        if (this.isOnBorder(food)) {
+            return false;
+        }
+        let theirShortPath = this.getGridEntryPoint(theirDirections);
+        this.updateAStarBoard(true);
+        //this.astarBoard.grid[food[0]][food[1]].weight = 0;
+        //console.log(theirShortPath);
+        //console.log(theirShortPath[theirShortPath.length - 1]);
+        let newPath = astar.search(this.astarBoard, this.getHeadNode(), theirShortPath[theirShortPath.length - 1]);
+        let wereCloser = this.areWeCloser(newPath, theirShortPath);
+        if (!wereCloser) {
+            return false;
+        }
+        return newPath;
+    }
+
+    getGridEntryPoint(theirAStarPath) {
+        let food = this.foodList[0];
+        //console.log(theirAStarPath.grid);
+        let lastItem = theirAStarPath.length - 2; // because we don't care about food.
+        while (this.isInGrid(theirAStarPath[lastItem]) && lastItem >= 0) {
+            lastItem--;
+        }
+        return theirAStarPath.slice(0, lastItem + 2); // theirAStarPath[lastItem + 1];
+    }
+
+    isInGrid(target): boolean {
+        let food = this.foodList[0];
+        return Math.abs(food[0] - target.x) <= 1 && Math.abs(food[1] - target.y) <= 1;
+    }
+
+    private areWeCloser(us, them) {
+        if (!them.length) {
+            return true;
+        }
+        return us.length < them.length;
+    }
+
+
+    private getOldMove(ourDirections) {
+        let nextSpot = ourDirections[0];
         if (!nextSpot) {
-            console.log("Found no valid path. Searching for open neighbor.");
+            // Stall method extremely unlikely.
+            //console.log("Found no valid path. Searching for open neighbor.");
             let secondTryDir = this.findClearNeighbor();
             if (!secondTryDir) {
-                console.log("Still Nothing");
+                //console.log("Still Nothing");
                 return Directions.DOWN;
             }
             return secondTryDir;
         }
         let move = this.getDirectionFromGridElement(nextSpot.x, nextSpot.y);
         return move;
+    }
+
+    private getEnemyHead() {
+        if (!this.otherSnake) {
+            return null;
+        }
+        let headX = this.otherSnake.head[0];
+        let headY = this.otherSnake.head[1];
+        return this.astarBoard.grid[headX][headY];
     }
 
     private getFoodNode() {

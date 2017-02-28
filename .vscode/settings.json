@@ -11,7 +11,7 @@
         "**/*.jsx":true,
         "compiled":true,
         "dist":true,
-        "node_modules":true,
+        "node_modules":false,
         "config":true,
         "Procfile":true,
         "app.json":true,

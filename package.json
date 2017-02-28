@@ -29,6 +29,7 @@
     "npm": "3.10.10"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "watch": "nodemon index.js"
   }
 }
