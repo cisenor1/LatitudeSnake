@@ -11,11 +11,11 @@
         "**/*.jsx":true,
         "compiled":true,
         "dist":true,
-        "node_modules":false,
+        "node_modules":true,
         "config":true,
         "Procfile":true,
         "app.json":true,
-        "/**/*.js": false
+        "/**/*.js": true
     }
 
 
