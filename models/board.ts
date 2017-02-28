@@ -1,5 +1,5 @@
 import { MoveContent, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
-import { astar, Graph } from "javascript-astar";
+import { astar, Graph } from "../javascript-astar-master/astar";
 export class Board {
     /** Coordinates of this snake. */
     coords: number[][];

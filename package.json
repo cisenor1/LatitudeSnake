@@ -20,7 +20,8 @@
     "nodemon": "*"
   },
   "devDependencies": {
-    "@types/node": "^7.0.5"
+    "@types/node": "^7.0.5",
+    "nodemon": "^1.11.0"
   },
   "main": "index.js",
   "engines": {

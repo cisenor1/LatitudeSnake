@@ -1,6 +1,6 @@
 "use strict";
 var utilities_1 = require("../utilities/utilities");
-var javascript_astar_1 = require("javascript-astar");
+var astar_1 = require("../javascript-astar-master/astar");
 var Board = (function () {
     function Board(height, width) {
         this.turn = 0;
@@ -44,7 +44,7 @@ var Board = (function () {
                 weightedBoard[x][y] = weightedCell;
             }
         }
-        this.astarBoard = new javascript_astar_1.Graph(weightedBoard);
+        this.astarBoard = new astar_1.Graph(weightedBoard);
     };
     Board.prototype.clearBoard = function () {
         for (var y = 0; y < this.height; y++) {
@@ -221,7 +221,7 @@ var Board = (function () {
     Board.prototype.getNextMove = function () {
         var food = this.getFoodNode();
         var head = this.getHeadNode();
-        var out = javascript_astar_1.astar.search(this.astarBoard, head, food);
+        var out = astar_1.astar.search(this.astarBoard, head, food);
         var nextSpot = out[0];
         if (!nextSpot) {
             console.log("Found no valid path. Searching for open neighbor.");
