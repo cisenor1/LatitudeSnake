@@ -9,6 +9,11 @@ export class Directions {
     static DOWN = "down";
     static LEFT = "left";
     static RIGHT = "right";
+    static UP_RIGHT = "upright";
+    static DOWN_RIGHT = "downright";
+    static UP_LEFT = "upleft";
+    static DOWN_LEFT = "downleft";
+
     private static allDirs = [
         Directions.UP,
         Directions.DOWN,

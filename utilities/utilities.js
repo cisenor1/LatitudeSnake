@@ -26,6 +26,10 @@ Directions.UP = "up";
 Directions.DOWN = "down";
 Directions.LEFT = "left";
 Directions.RIGHT = "right";
+Directions.UP_RIGHT = "upright";
+Directions.DOWN_RIGHT = "downright";
+Directions.UP_LEFT = "upleft";
+Directions.DOWN_LEFT = "downleft";
 Directions.allDirs = [
     Directions.UP,
     Directions.DOWN,
