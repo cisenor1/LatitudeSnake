@@ -17,7 +17,7 @@ export class Board {
     taunt: string;
     turn = 0;
 
-    LOOPING_LENGTH = 1;
+    LOOPING_LENGTH = 8;
     head: Point;
     height: number;
     width: number;
@@ -35,9 +35,10 @@ export class Board {
     private DOWN_RIGHT = [1, 1];
     private DOWN_LEFT = [-1, 1];
 
-    constructor(height: number, width: number) {
+    constructor(height: number, width: number, loopingLength: number) {
         this.height = height;
         this.width = width;
+        this.LOOPING_LENGTH = loopingLength;
         this.initBoard();
     }
 
@@ -49,7 +50,9 @@ export class Board {
                     this.currentBoard[x] = [];
                 }
                 this.currentBoard[x][y] = {
-                    state: BoardCellContent.EMPTY
+                    state: BoardCellContent.EMPTY,
+                    x: x,
+                    y: y
                 }
             }
         }
@@ -80,7 +83,9 @@ export class Board {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 this.currentBoard[x][y] = {
-                    state: BoardCellContent.EMPTY
+                    state: BoardCellContent.EMPTY,
+                    x: x,
+                    y: y
                 }
             }
         }
@@ -127,7 +132,9 @@ export class Board {
         this.coords = thisSnake.coords.map((c) => { return { x: c[0], y: c[1] } });
         this.health_points = thisSnake.health_points;
         this.otherSnake = body.snakes.filter((s) => { return s.id != this.id; })[0];
-        this.otherSnake.head = { x: this.otherSnake.coords[0][0], y: this.otherSnake.coords[0][1] };
+        if (this.otherSnake) {
+            this.otherSnake.head = { x: this.otherSnake.coords[0][0], y: this.otherSnake.coords[0][1] };
+        }
         this.updateAStarBoard();
     }
 
@@ -139,7 +146,7 @@ export class Board {
         let x = this.head.x;
         let y = this.head.y - 1;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: BoardCellContent.WALL };
+            return { state: BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     }
@@ -147,15 +154,15 @@ export class Board {
         let x = this.head.x;
         let y = this.head.y + 1;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: BoardCellContent.WALL };
+            return { state: BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     }
     getLeft(): BoardCell {
-        let x = this.head.x- 1;
-        let y = this.head.y ;
+        let x = this.head.x - 1;
+        let y = this.head.y;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: BoardCellContent.WALL };
+            return { state: BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     }
@@ -163,10 +170,17 @@ export class Board {
         let x = this.head.x + 1;
         let y = this.head.y;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: BoardCellContent.WALL };
+            return { state: BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     }
+
+    cellIsOurTail(cell: BoardCell): boolean {
+        let ourTail = this.coords[this.coords.length - 1];
+        let itsOurTail = ourTail.x == cell.x && ourTail.y == cell.y; 
+        return itsOurTail;
+    }
+
 
 
     // getNeighbors(): OneSpaceNeighbors {
@@ -223,8 +237,7 @@ export class Board {
     //         }
     //         validOptions.push(p.toLocaleLowerCase());
     //     }
-    //     let opt;
-    //     //console.log("Valid Options:", validOptions);
+    //     let opt; 
     //     if (!validOptions.length) {
     //         opt = Directions.DOWN;
     //     } else {
@@ -234,7 +247,7 @@ export class Board {
 
     // }
 
-    private getNode(dir: string) {
+    private getNode(dir: string) { 
         let headX = this.head.x;
         let headY = this.head.y;
         let mod;
@@ -255,14 +268,11 @@ export class Board {
                 mod = this.DOWN_LEFT;
             case Directions.DOWN_RIGHT:
                 mod = this.DOWN_RIGHT;
-        }
+        } 
         return this.astarBoard.grid[headX + mod[0]][headY + mod[1]];
 
     }
-
-    weGotLastFood(): boolean {
-        return
-    }
+ 
 
     /*
         get their head.
@@ -280,22 +290,47 @@ export class Board {
 
     */
 
+    foodIsNeighbor(): boolean {
+        if (this.getUp().state == BoardCellContent.FOOD || this.getDown().state == BoardCellContent.FOOD || this.getLeft().state == BoardCellContent.FOOD || this.getRight().state == BoardCellContent.FOOD) {
+            return true;
+        }
+        if (this.foodIsDiagonal()){
+            return true;
+        }
+        return false;
+    }
+
+    private gridNodeHasFood(pt:Point):boolean{   
+        if (pt.x < 0 || pt.x >= this.width || pt.y < 0 || pt.y >= this.height){
+            return false;
+        }
+        return this.currentBoard[pt.x][pt.y].state == BoardCellContent.FOOD;
+
+    }
+    private foodIsDiagonal():boolean{  
+        let ul = this.gridNodeHasFood({x:this.head.x + this.UP_LEFT[0], y:this.head.y + this.UP_LEFT[1]});
+        let dl = this.gridNodeHasFood({x:this.head.x + this.DOWN_LEFT[0], y:this.head.y + this.DOWN_LEFT[1]});
+        let ur = this.gridNodeHasFood({x:this.head.x + this.UP_RIGHT[0], y:this.head.y + this.UP_RIGHT[1]});
+        let dr = this.gridNodeHasFood({x:this.head.x + this.DOWN_RIGHT[0], y:this.head.y + this.DOWN_RIGHT[1]});
+ 
+        return ul||dl||ur||dr;
+    }
+
     getNextMove(): string {
         let food = this.getFoodNode();
         let head = this.getHeadNode();
         let enemy = this.getEnemyHead();
         let ourDirections: GridNode[] = astar.search(this.astarBoard, head, food);
-        let theirDirections: GridNode[] = astar.search(this.astarBoard, enemy, food);
-        if (this.areWeCloser(ourDirections, theirDirections)) {
-            // console.log("We're closer");
+        let theirDirections: GridNode[] = [];
+        if (enemy) {
+            theirDirections = astar.search(this.astarBoard, enemy, food);
+        }
+        if (this.areWeCloser(ourDirections, theirDirections)) { 
             let newPath = this.shouldWeLoop(ourDirections, theirDirections);
-            if (newPath) {
-                // console.log("Planning on looping: ", newPath, theirDirections);
-                if (newPath.length == 0) {
-                    console.log("MOM! WERE LOOPING!");
+            if (newPath) { 
+                if (this.foodIsNeighbor()) { 
                     return this.doALoopDeLoop();
-                }
-                console.log("New Path:");
+                }  
                 return this.getOldMove(newPath);
             }
             return this.getOldMove(ourDirections)
@@ -305,59 +340,66 @@ export class Board {
         }
     }
 
-    private getEmptyLeftOrRight():string{
-        if (this.getLeft().state == BoardCellContent.EMPTY){
-            return "left";
+    private getEmptyLeftOrRight(): string {
+        let cell = this.getLeft()
+        if (cell.state == BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
+            return Directions.LEFT;
         }
-        return "right";
+        return Directions.RIGHT;
     }
-    private getEmptyUpOrDown():string{
-        if (this.getUp().state == BoardCellContent.EMPTY){
-            return "up";
+    private getEmptyUpOrDown(): string {
+        let cell = this.getUp()
+        if (cell.state == BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
+            return Directions.UP;
         }
-        return "down";
+        return Directions.DOWN;
     }
 
-
-    private doALoopDeLoop(): string {
+    private doALoopDeLoop(): string { 
         let foodLocation = this.getFoodNode();
-        if (foodLocation.x == this.head.x){
+        if (foodLocation.x == this.head.x) { 
             return this.getEmptyLeftOrRight()
-        }else if (foodLocation.y == this.head.y) {
+        } else if (foodLocation.y == this.head.y) { 
             return this.getEmptyUpOrDown();
-        }else{
-            // it's diagonal
-            if (foodLocation.x > this.head.x){
+        } else {
+            // it's diagonal 
+            if (foodLocation.x > this.head.x) {
                 // it's right
-                if (foodLocation.y > this.head.y){
+                if (foodLocation.y > this.head.y) {
+                    let down = this.getDown();
+                    let right = this.getRight();
                     // it's down-right
-                    if (this.getDown().state == BoardCellContent.EMPTY){
+                    if (down.state == BoardCellContent.EMPTY || this.cellIsOurTail(down)) {
                         return Directions.DOWN;
-                    }else{
+                    } else if (right.state == BoardCellContent.EMPTY || this.cellIsOurTail(right)) {
                         return Directions.RIGHT;
                     }
-                }else{
+                } else {
+                    let up = this.getUp();
+                    let right = this.getRight();
                     // it's up-right
-                    if (this.getUp().state == BoardCellContent.EMPTY){
+                    if (up.state == BoardCellContent.EMPTY || this.cellIsOurTail(up)) {
                         return Directions.UP;
-                    }else{
+                    } else if (right.state == BoardCellContent.EMPTY || this.cellIsOurTail(right)) {
                         return Directions.RIGHT;
                     }
                 }
-            }else{
+            } else {
                 // it's left
-                if (foodLocation.y > this.head.y){
-                    // it's down-left
-                    if (this.getDown().state == BoardCellContent.EMPTY){
+                if (foodLocation.y > this.head.y) {
+                    let cell = this.getDown()
+                    // it's down-left 
+                    if (cell.state == BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
                         return Directions.DOWN;
-                    }else{
+                    } else {
                         return Directions.LEFT;
                     }
-                }else{
+                } else {
+                    let cell = this.getUp() 
                     // it's up-left
-                    if (this.getUp().state == BoardCellContent.EMPTY){
+                    if (cell.state == BoardCellContent.EMPTY || this.cellIsOurTail(cell)) { 
                         return Directions.UP;
-                    }else{
+                    } else { 
                         return Directions.LEFT;
                     }
                 }
@@ -378,36 +420,30 @@ export class Board {
     }
 
     private shouldWeLoop(ourDirections: GridNode[], theirDirections: GridNode[]) {
-        if (this.coords.length < this.LOOPING_LENGTH) {
-            console.log("We're not long enough.")
+        if (this.coords.length < this.LOOPING_LENGTH) { 
+            return false;
+        }
+        if (this.otherSnake && this.health_points < this.otherSnake.health_points) { 
             return false;
         }
         let food = this.foodList[0];
-        if (this.health_points < this.otherSnake.health_points) {
-            console.log("They're Stronger")
+        if (this.isOnBorder(food)) { 
             return false;
         }
-        let head = this.getHeadNode(); 
-        if (!theirDirections.length){
-            let tail = this.getOurTail();
-            return astar.search(this.astarBoard,head,tail);
+        let head = this.getHeadNode();
+        if (!theirDirections.length) { 
+            return astar.search(this.astarBoard, head, this.getFoodNode());
         }
 
-        if (this.isOnBorder(food)) {
-            console.log("Food's on a border.")
-            return false;
-        }
         let theirShortPath = this.getGridEntryPoint(theirDirections);
         // this.updateAStarBoard(true);
-        //this.astarBoard.grid[food.x][food.y].weight = 0;
-        //console.log(theirShortPath); 
+        //this.astarBoard.grid[food.x][food.y].weight = 0; 
         let theirEntryPoint = theirShortPath[theirShortPath.length - 1];
         return astar.search(this.astarBoard, head, theirEntryPoint);
 
     }
 
-    private getGridEntryPoint(theirAStarPath: GridNode[]): GridNode[] {
-        //console.log(theirAStarPath.grid);
+    private getGridEntryPoint(theirAStarPath: GridNode[]): GridNode[] { 
         let lastItem = theirAStarPath.length - 2; // because we don't care about food.
         while (this.isInGrid(theirAStarPath[lastItem]) && lastItem >= 0) {
             lastItem--;
@@ -416,7 +452,7 @@ export class Board {
     }
 
     private isInGrid(target: Point): boolean {
-        if (!target){
+        if (!target) {
             return false;
         }
         let food = this.foodList[0];
@@ -434,11 +470,9 @@ export class Board {
     private getOldMove(ourDirections: GridNode[]): string {
         let nextSpot = ourDirections[0];
         if (!nextSpot) {
-            // Stall method extremely unlikely.
-            //console.log("Found no valid path. Searching for open neighbor.");
+            // Stall method extremely unlikely. 
             // let secondTryDir = this.findClearNeighbor();
-            // if (!secondTryDir) {
-            //     //console.log("Still Nothing");
+            // if (!secondTryDir) { 
             //     return Directions.DOWN;
             // }
             // return secondTryDir;
@@ -462,7 +496,7 @@ export class Board {
         return this.astarBoard.grid[foodX][foodY];
     }
 
-    private getOurTail():GridNode{
+    private getOurTail(): GridNode {
         let tailCoords = this.coords[this.coords.length - 1];
         let tx = tailCoords.x;
         let ty = tailCoords.y;

@@ -2,9 +2,9 @@
 var utilities_1 = require("../utilities/utilities");
 var javascript_astar_1 = require("javascript-astar");
 var Board = (function () {
-    function Board(height, width) {
+    function Board(height, width, loopingLength) {
         this.turn = 0;
-        this.LOOPING_LENGTH = 1;
+        this.LOOPING_LENGTH = 8;
         this.avoidFood = false;
         this.UP = [0, -1];
         this.DOWN = [0, 1];
@@ -16,6 +16,7 @@ var Board = (function () {
         this.DOWN_LEFT = [-1, 1];
         this.height = height;
         this.width = width;
+        this.LOOPING_LENGTH = loopingLength;
         this.initBoard();
     }
     Board.prototype.initBoard = function () {
@@ -26,7 +27,9 @@ var Board = (function () {
                     this.currentBoard[x] = [];
                 }
                 this.currentBoard[x][y] = {
-                    state: utilities_1.BoardCellContent.EMPTY
+                    state: utilities_1.BoardCellContent.EMPTY,
+                    x: x,
+                    y: y
                 };
             }
         }
@@ -57,7 +60,9 @@ var Board = (function () {
         for (var y = 0; y < this.height; y++) {
             for (var x = 0; x < this.width; x++) {
                 this.currentBoard[x][y] = {
-                    state: utilities_1.BoardCellContent.EMPTY
+                    state: utilities_1.BoardCellContent.EMPTY,
+                    x: x,
+                    y: y
                 };
             }
         }
@@ -101,7 +106,9 @@ var Board = (function () {
         this.coords = thisSnake.coords.map(function (c) { return { x: c[0], y: c[1] }; });
         this.health_points = thisSnake.health_points;
         this.otherSnake = body.snakes.filter(function (s) { return s.id != _this.id; })[0];
-        this.otherSnake.head = { x: this.otherSnake.coords[0][0], y: this.otherSnake.coords[0][1] };
+        if (this.otherSnake) {
+            this.otherSnake.head = { x: this.otherSnake.coords[0][0], y: this.otherSnake.coords[0][1] };
+        }
         this.updateAStarBoard();
     };
     Board.prototype.isItOnTheBoard = function (x, y) {
@@ -111,7 +118,7 @@ var Board = (function () {
         var x = this.head.x;
         var y = this.head.y - 1;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: utilities_1.BoardCellContent.WALL };
+            return { state: utilities_1.BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     };
@@ -119,7 +126,7 @@ var Board = (function () {
         var x = this.head.x;
         var y = this.head.y + 1;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: utilities_1.BoardCellContent.WALL };
+            return { state: utilities_1.BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     };
@@ -127,7 +134,7 @@ var Board = (function () {
         var x = this.head.x - 1;
         var y = this.head.y;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: utilities_1.BoardCellContent.WALL };
+            return { state: utilities_1.BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
     };
@@ -135,9 +142,14 @@ var Board = (function () {
         var x = this.head.x + 1;
         var y = this.head.y;
         if (!this.isItOnTheBoard(x, y)) {
-            return { state: utilities_1.BoardCellContent.WALL };
+            return { state: utilities_1.BoardCellContent.WALL, x: x, y: y };
         }
         return this.currentBoard[x][y];
+    };
+    Board.prototype.cellIsOurTail = function (cell) {
+        var ourTail = this.coords[this.coords.length - 1];
+        var itsOurTail = ourTail.x == cell.x && ourTail.y == cell.y;
+        return itsOurTail;
     };
     // getNeighbors(): OneSpaceNeighbors {
     //     return {
@@ -190,8 +202,7 @@ var Board = (function () {
     //         }
     //         validOptions.push(p.toLocaleLowerCase());
     //     }
-    //     let opt;
-    //     //console.log("Valid Options:", validOptions);
+    //     let opt; 
     //     if (!validOptions.length) {
     //         opt = Directions.DOWN;
     //     } else {
@@ -223,9 +234,6 @@ var Board = (function () {
         }
         return this.astarBoard.grid[headX + mod[0]][headY + mod[1]];
     };
-    Board.prototype.weGotLastFood = function () {
-        return;
-    };
     /*
         get their head.
         who gets the next food.
@@ -241,22 +249,43 @@ var Board = (function () {
 
 
     */
+    Board.prototype.foodIsNeighbor = function () {
+        if (this.getUp().state == utilities_1.BoardCellContent.FOOD || this.getDown().state == utilities_1.BoardCellContent.FOOD || this.getLeft().state == utilities_1.BoardCellContent.FOOD || this.getRight().state == utilities_1.BoardCellContent.FOOD) {
+            return true;
+        }
+        if (this.foodIsDiagonal()) {
+            return true;
+        }
+        return false;
+    };
+    Board.prototype.gridNodeHasFood = function (pt) {
+        if (pt.x < 0 || pt.x >= this.width || pt.y < 0 || pt.y >= this.height) {
+            return false;
+        }
+        return this.currentBoard[pt.x][pt.y].state == utilities_1.BoardCellContent.FOOD;
+    };
+    Board.prototype.foodIsDiagonal = function () {
+        var ul = this.gridNodeHasFood({ x: this.head.x + this.UP_LEFT[0], y: this.head.y + this.UP_LEFT[1] });
+        var dl = this.gridNodeHasFood({ x: this.head.x + this.DOWN_LEFT[0], y: this.head.y + this.DOWN_LEFT[1] });
+        var ur = this.gridNodeHasFood({ x: this.head.x + this.UP_RIGHT[0], y: this.head.y + this.UP_RIGHT[1] });
+        var dr = this.gridNodeHasFood({ x: this.head.x + this.DOWN_RIGHT[0], y: this.head.y + this.DOWN_RIGHT[1] });
+        return ul || dl || ur || dr;
+    };
     Board.prototype.getNextMove = function () {
         var food = this.getFoodNode();
         var head = this.getHeadNode();
         var enemy = this.getEnemyHead();
         var ourDirections = javascript_astar_1.astar.search(this.astarBoard, head, food);
-        var theirDirections = javascript_astar_1.astar.search(this.astarBoard, enemy, food);
+        var theirDirections = [];
+        if (enemy) {
+            theirDirections = javascript_astar_1.astar.search(this.astarBoard, enemy, food);
+        }
         if (this.areWeCloser(ourDirections, theirDirections)) {
-            // console.log("We're closer");
             var newPath = this.shouldWeLoop(ourDirections, theirDirections);
             if (newPath) {
-                // console.log("Planning on looping: ", newPath, theirDirections);
-                if (newPath.length == 0) {
-                    console.log("MOM! WERE LOOPING!");
+                if (this.foodIsNeighbor()) {
                     return this.doALoopDeLoop();
                 }
-                console.log("New Path:");
                 return this.getOldMove(newPath);
             }
             return this.getOldMove(ourDirections);
@@ -267,16 +296,18 @@ var Board = (function () {
         }
     };
     Board.prototype.getEmptyLeftOrRight = function () {
-        if (this.getLeft().state == utilities_1.BoardCellContent.EMPTY) {
-            return "left";
+        var cell = this.getLeft();
+        if (cell.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
+            return utilities_1.Directions.LEFT;
         }
-        return "right";
+        return utilities_1.Directions.RIGHT;
     };
     Board.prototype.getEmptyUpOrDown = function () {
-        if (this.getUp().state == utilities_1.BoardCellContent.EMPTY) {
-            return "up";
+        var cell = this.getUp();
+        if (cell.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
+            return utilities_1.Directions.UP;
         }
-        return "down";
+        return utilities_1.Directions.DOWN;
     };
     Board.prototype.doALoopDeLoop = function () {
         var foodLocation = this.getFoodNode();
@@ -287,24 +318,28 @@ var Board = (function () {
             return this.getEmptyUpOrDown();
         }
         else {
-            // it's diagonal
+            // it's diagonal 
             if (foodLocation.x > this.head.x) {
                 // it's right
                 if (foodLocation.y > this.head.y) {
+                    var down = this.getDown();
+                    var right = this.getRight();
                     // it's down-right
-                    if (this.getDown().state == utilities_1.BoardCellContent.EMPTY) {
+                    if (down.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(down)) {
                         return utilities_1.Directions.DOWN;
                     }
-                    else {
+                    else if (right.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(right)) {
                         return utilities_1.Directions.RIGHT;
                     }
                 }
                 else {
+                    var up = this.getUp();
+                    var right = this.getRight();
                     // it's up-right
-                    if (this.getUp().state == utilities_1.BoardCellContent.EMPTY) {
+                    if (up.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(up)) {
                         return utilities_1.Directions.UP;
                     }
-                    else {
+                    else if (right.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(right)) {
                         return utilities_1.Directions.RIGHT;
                     }
                 }
@@ -312,8 +347,9 @@ var Board = (function () {
             else {
                 // it's left
                 if (foodLocation.y > this.head.y) {
-                    // it's down-left
-                    if (this.getDown().state == utilities_1.BoardCellContent.EMPTY) {
+                    var cell = this.getDown();
+                    // it's down-left 
+                    if (cell.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
                         return utilities_1.Directions.DOWN;
                     }
                     else {
@@ -321,8 +357,9 @@ var Board = (function () {
                     }
                 }
                 else {
+                    var cell = this.getUp();
                     // it's up-left
-                    if (this.getUp().state == utilities_1.BoardCellContent.EMPTY) {
+                    if (cell.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
                         return utilities_1.Directions.UP;
                     }
                     else {
@@ -345,32 +382,26 @@ var Board = (function () {
     };
     Board.prototype.shouldWeLoop = function (ourDirections, theirDirections) {
         if (this.coords.length < this.LOOPING_LENGTH) {
-            console.log("We're not long enough.");
+            return false;
+        }
+        if (this.otherSnake && this.health_points < this.otherSnake.health_points) {
             return false;
         }
         var food = this.foodList[0];
-        if (this.health_points < this.otherSnake.health_points) {
-            console.log("They're Stronger");
+        if (this.isOnBorder(food)) {
             return false;
         }
         var head = this.getHeadNode();
         if (!theirDirections.length) {
-            var tail = this.getOurTail();
-            return javascript_astar_1.astar.search(this.astarBoard, head, tail);
-        }
-        if (this.isOnBorder(food)) {
-            console.log("Food's on a border.");
-            return false;
+            return javascript_astar_1.astar.search(this.astarBoard, head, this.getFoodNode());
         }
         var theirShortPath = this.getGridEntryPoint(theirDirections);
         // this.updateAStarBoard(true);
-        //this.astarBoard.grid[food.x][food.y].weight = 0;
-        //console.log(theirShortPath); 
+        //this.astarBoard.grid[food.x][food.y].weight = 0; 
         var theirEntryPoint = theirShortPath[theirShortPath.length - 1];
         return javascript_astar_1.astar.search(this.astarBoard, head, theirEntryPoint);
     };
     Board.prototype.getGridEntryPoint = function (theirAStarPath) {
-        //console.log(theirAStarPath.grid);
         var lastItem = theirAStarPath.length - 2; // because we don't care about food.
         while (this.isInGrid(theirAStarPath[lastItem]) && lastItem >= 0) {
             lastItem--;

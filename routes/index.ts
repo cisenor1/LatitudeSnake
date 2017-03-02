@@ -21,7 +21,7 @@ router.post(config.routes.start, function (req, res) {
   config.game_id = req.body.game_id;
   config.width = req.body.width;
   config.height = req.body.height;
-  board = new Board(config.height, config.width); 
+  board = new Board(config.height, config.width, config.loopingLength); 
   // Response data
   var data = {
     color: config.snake.color,

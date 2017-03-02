@@ -1,6 +1,7 @@
 {
   "host": "localhost",
   "port": 9001,
+  "loopingLength":6,
   "routes": {
     "info": "/",
     "start": "/start",

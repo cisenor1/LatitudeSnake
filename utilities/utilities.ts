@@ -39,6 +39,8 @@ export interface BoardCell{
     state: string;
     /** The ID of the snake currently contained in that board cell. */
     snake?: string;
+    x:number;
+    y:number;
 } 
 /** Slithering monster. */
 
