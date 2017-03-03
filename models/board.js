@@ -2,10 +2,11 @@
 var utilities_1 = require("../utilities/utilities");
 var javascript_astar_master_1 = require("javascript-astar-master");
 var Board = (function () {
-    function Board(height, width, loopingLength, planningNumber) {
+    function Board(height, width, loopingLength, planningNumber, numberOfSquares) {
         this.turn = 0;
         this.LOOPING_LENGTH = 8;
         this.PLANNING_LENGTH = 1;
+        this.LOOP_FLAG = false;
         this.avoidFood = false;
         this.UP = [0, -1];
         this.DOWN = [0, 1];
@@ -19,6 +20,7 @@ var Board = (function () {
         this.width = width;
         this.PLANNING_LENGTH = planningNumber;
         this.LOOPING_LENGTH = loopingLength;
+        this.numberOfSquares = numberOfSquares;
         this.initBoard();
     }
     Board.prototype.initBoard = function () {
@@ -101,6 +103,10 @@ var Board = (function () {
         this.clearBoard();
         this.addSnakesToBoard(body.snakes);
         this.addFoodToBoard(body.food);
+        if (this.LOOP_FLAG && (this.foodList[0].x != this.loopFood.x && this.foodList[0].y != this.loopFood.y)) {
+            this.LOOP_FLAG = false;
+            this.loopFood = null;
+        }
         this.id = body.you;
         var allSnakes = body.snakes.filter(function (s) { return s.id == _this.id; });
         var thisSnake = allSnakes[0];
@@ -204,7 +210,7 @@ var Board = (function () {
     //         }
     //         validOptions.push(p.toLocaleLowerCase());
     //     }
-    //     let opt; 
+    //     let opt;
     //     if (!validOptions.length) {
     //         opt = Directions.DOWN;
     //     } else {
@@ -327,8 +333,11 @@ var Board = (function () {
         }
         if (this.areWeCloser(ourDirections, theirDirections)) {
             var newPath = this.shouldWeLoop(ourDirections, theirDirections);
+            if (newPath && newPath.length == 0) {
+                return this.loop();
+            }
             if (newPath) {
-                if (this.foodIsNeighbor()) {
+                if (this.LOOP_FLAG || this.foodIsNeighbor()) {
                     return this.doALoopDeLoop();
                 }
                 return this.getOldMove(newPath);
@@ -353,7 +362,7 @@ var Board = (function () {
         }
         return utilities_1.Directions.DOWN;
     };
-    Board.prototype.doALoopDeLoop = function () {
+    Board.prototype.doOldLoop = function () {
         var foodLocation = this.getFoodNode();
         if (foodLocation.x == this.head.x) {
             return this.getEmptyLeftOrRight();
@@ -362,7 +371,7 @@ var Board = (function () {
             return this.getEmptyUpOrDown();
         }
         else {
-            // it's diagonal 
+            // it's diagonal
             if (foodLocation.x > this.head.x) {
                 // it's right
                 if (foodLocation.y > this.head.y) {
@@ -392,7 +401,7 @@ var Board = (function () {
                 // it's left
                 if (foodLocation.y > this.head.y) {
                     var cell = this.getDown();
-                    // it's down-left 
+                    // it's down-left
                     if (cell.state == utilities_1.BoardCellContent.EMPTY || this.cellIsOurTail(cell)) {
                         return utilities_1.Directions.DOWN;
                     }
@@ -412,6 +421,65 @@ var Board = (function () {
                 }
             }
         }
+    };
+    Board.prototype.shouldStartLooping = function () {
+        for (var i = 0; i < this.numberOfSquares; i++) {
+            var curr = this.coords[i];
+            if (!this.isInGrid(curr)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    Board.prototype.doALoopDeLoop = function () {
+        // Set the food as a wall.
+        if (this.shouldStartLooping()) {
+            this.LOOP_FLAG = true;
+            this.loopFood = this.foodList[0];
+        }
+        // If not loop flag
+        if (!this.LOOP_FLAG) {
+            return this.doOldLoop();
+        }
+        return this.loop();
+    };
+    Board.prototype.loop = function () {
+        // Weight the Board
+        this.weightTheBoard();
+        // Chase our tail 
+        var tail = this.getOurTail();
+        tail.weight = 1;
+        var head = this.getHeadNode();
+        head.weight = 1;
+        var directions = javascript_astar_master_1.astar.search(this.astarBoard, head, tail);
+        if (!directions.length) {
+            return this.shouldNotFood();
+        }
+        return this.getOldMove(directions);
+    };
+    Board.prototype.weightTheBoard = function () {
+        var weightedBoard = [];
+        for (var y = 0; y < this.height; y++) {
+            for (var x = 0; x < this.width; x++) {
+                if (y == 0) {
+                    weightedBoard[x] = [];
+                }
+                var cell = this.currentBoard[x][y];
+                var weightedCell = void 0;
+                if (cell.state == utilities_1.BoardCellContent.WALL || cell.snake || cell.state == utilities_1.BoardCellContent.FOOD) {
+                    weightedCell = 0;
+                }
+                else {
+                    var difX = Math.abs(this.loopFood.x - x);
+                    var difY = Math.abs(this.loopFood.y - y);
+                    var total = difX + difY;
+                    var power = Math.min(total, 6);
+                    weightedCell = Math.pow(2, power - 1);
+                }
+                weightedBoard[x][y] = weightedCell;
+            }
+        }
+        this.astarBoard = new javascript_astar_master_1.Graph(weightedBoard);
     };
     Board.prototype.isOnBorder = function (inCoords) {
         var x = inCoords.x;
@@ -441,7 +509,7 @@ var Board = (function () {
         }
         var theirShortPath = this.getGridEntryPoint(theirDirections);
         // this.updateAStarBoard(true);
-        //this.astarBoard.grid[food.x][food.y].weight = 0; 
+        //this.astarBoard.grid[food.x][food.y].weight = 0;
         var theirEntryPoint = theirShortPath[theirShortPath.length - 1];
         return javascript_astar_master_1.astar.search(this.astarBoard, head, theirEntryPoint);
     };
@@ -536,3 +604,4 @@ var Board = (function () {
     return Board;
 }());
 exports.Board = Board;
+//# sourceMappingURL=board.js.map

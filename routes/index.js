@@ -20,7 +20,7 @@ router.post(config.routes.start, function (req, res) {
     config.game_id = req.body.game_id;
     config.width = req.body.width;
     config.height = req.body.height;
-    board = new board_1.Board(config.height, config.width, config.loopingLength, config.planningDistance);
+    board = new board_1.Board(config.height, config.width, config.loopingLength, config.planningDistance, config.numberOfSquaresToLoop);
     // Response data
     var data = {
         color: config.snake.color,
@@ -77,3 +77,4 @@ router.post(config.routes.end, function (req, res) {
     return;
 });
 module.exports = router;
+//# sourceMappingURL=index.js.map

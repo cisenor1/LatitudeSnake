@@ -1,8 +1,9 @@
 {
   "host": "localhost",
   "port": 9001,
-  "loopingLength":6,
+  "loopingLength":100,
   "planningDistance":5,
+  "numberOfSquaresToLoop": 6,
   "routes": {
     "info": "/",
     "start": "/start",
