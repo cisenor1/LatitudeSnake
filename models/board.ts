@@ -1,5 +1,5 @@
 import { MoveContent, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
-import { astar, Graph } from "javascript-astar";
+import { astar, Graph } from "javascript-astar-master";
 export interface Point {
     x: number;
     y: number;
@@ -18,6 +18,7 @@ export class Board {
     turn = 0;
 
     LOOPING_LENGTH = 8;
+    PLANNING_LENGTH = 1;
     head: Point;
     height: number;
     width: number;
@@ -35,9 +36,10 @@ export class Board {
     private DOWN_RIGHT = [1, 1];
     private DOWN_LEFT = [-1, 1];
 
-    constructor(height: number, width: number, loopingLength: number) {
+    constructor(height: number, width: number, loopingLength: number, planningNumber:number) {
         this.height = height;
         this.width = width;
+        this.PLANNING_LENGTH = planningNumber;
         this.LOOPING_LENGTH = loopingLength;
         this.initBoard();
     }
@@ -316,6 +318,55 @@ export class Board {
         return ul||dl||ur||dr;
     }
 
+    private getQuadrant(point:Point){
+        let quadrant = 0;        
+        if (point.x < this.width/2){
+            // left
+        }else{
+            //right
+            quadrant++;
+        }
+
+        if (point.y < this.height/2){
+            //up
+        }else{
+            //down
+            quadrant += 2
+        }
+        return quadrant;
+    }
+
+    private getQuadrantPoint(quadrant:number){
+        switch (quadrant){
+            case 0:
+                return {x:Math.floor(this.width/4), y:Math.floor(this.height/4)};
+            case 1:
+                return {x:Math.floor(this.width*3/4), y:Math.floor(this.height/4)};
+            case 2:
+                return {x:Math.floor(this.width/4), y:Math.floor(this.height*3/4)};
+            case 3:
+                return {x:Math.floor(this.width*3/4), y:Math.floor(this.height*3/4)};
+        }
+    }
+
+    private getOtherQuadrant():Point{
+        let food = this.foodList[0];
+        let foodQuadrant  = this.getQuadrant(food);
+        let ourQuadrant = this.getQuadrant(this.head);
+        let remainingQuadrants = [0,1,2,3].filter((x)=>{return x != ourQuadrant && x != foodQuadrant;});
+        let targetIndex = Math.floor(Math.random() * remainingQuadrants.length);
+        let targetQuadrant = remainingQuadrants[targetIndex]; 
+        return this.getQuadrantPoint(targetQuadrant);
+}
+
+
+    shouldNotFood(){
+        let destination = this.getOtherQuadrant();
+        let dNode = this.astarBoard.grid[destination.x][destination.y];
+        let notFoodDirections:GridNode[] = astar.search(this.astarBoard, this.getHeadNode(), dNode);
+        return this.getOldMove(notFoodDirections);
+    }
+
     getNextMove(): string {
         let food = this.getFoodNode();
         let head = this.getHeadNode();
@@ -334,9 +385,9 @@ export class Board {
                 return this.getOldMove(newPath);
             }
             return this.getOldMove(ourDirections)
-        } else {
-            console.log("ShouldNotFood");
-            return this.getOldMove(ourDirections);
+        } else { 
+
+            return this.shouldNotFood();
         }
     }
 
@@ -357,6 +408,7 @@ export class Board {
 
     private doALoopDeLoop(): string { 
         let foodLocation = this.getFoodNode();
+        
         if (foodLocation.x == this.head.x) { 
             return this.getEmptyLeftOrRight()
         } else if (foodLocation.y == this.head.y) { 
@@ -460,6 +512,9 @@ export class Board {
     }
 
     private areWeCloser(us: GridNode[], them: GridNode[]): boolean {
+        if(this.otherSnake && this.otherSnake.health_points > this.health_points){
+            return true;
+        }
         if (!them.length) {
             return true;
         }

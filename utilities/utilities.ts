@@ -1,4 +1,4 @@
-import {Board} from "../Models/board";
+import {Board} from "../models/board";
 
 export class BetterError extends Error {
     status: number;

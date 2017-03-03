@@ -1,10 +1,11 @@
 "use strict";
 var utilities_1 = require("../utilities/utilities");
-var javascript_astar_1 = require("javascript-astar");
+var javascript_astar_master_1 = require("javascript-astar-master");
 var Board = (function () {
-    function Board(height, width, loopingLength) {
+    function Board(height, width, loopingLength, planningNumber) {
         this.turn = 0;
         this.LOOPING_LENGTH = 8;
+        this.PLANNING_LENGTH = 1;
         this.avoidFood = false;
         this.UP = [0, -1];
         this.DOWN = [0, 1];
@@ -16,6 +17,7 @@ var Board = (function () {
         this.DOWN_LEFT = [-1, 1];
         this.height = height;
         this.width = width;
+        this.PLANNING_LENGTH = planningNumber;
         this.LOOPING_LENGTH = loopingLength;
         this.initBoard();
     }
@@ -54,7 +56,7 @@ var Board = (function () {
                 weightedBoard[x][y] = weightedCell;
             }
         }
-        this.astarBoard = new javascript_astar_1.Graph(weightedBoard);
+        this.astarBoard = new javascript_astar_master_1.Graph(weightedBoard);
     };
     Board.prototype.clearBoard = function () {
         for (var y = 0; y < this.height; y++) {
@@ -271,14 +273,57 @@ var Board = (function () {
         var dr = this.gridNodeHasFood({ x: this.head.x + this.DOWN_RIGHT[0], y: this.head.y + this.DOWN_RIGHT[1] });
         return ul || dl || ur || dr;
     };
+    Board.prototype.getQuadrant = function (point) {
+        var quadrant = 0;
+        if (point.x < this.width / 2) {
+        }
+        else {
+            //right
+            quadrant++;
+        }
+        if (point.y < this.height / 2) {
+        }
+        else {
+            //down
+            quadrant += 2;
+        }
+        return quadrant;
+    };
+    Board.prototype.getQuadrantPoint = function (quadrant) {
+        switch (quadrant) {
+            case 0:
+                return { x: Math.floor(this.width / 4), y: Math.floor(this.height / 4) };
+            case 1:
+                return { x: Math.floor(this.width * 3 / 4), y: Math.floor(this.height / 4) };
+            case 2:
+                return { x: Math.floor(this.width / 4), y: Math.floor(this.height * 3 / 4) };
+            case 3:
+                return { x: Math.floor(this.width * 3 / 4), y: Math.floor(this.height * 3 / 4) };
+        }
+    };
+    Board.prototype.getOtherQuadrant = function () {
+        var food = this.foodList[0];
+        var foodQuadrant = this.getQuadrant(food);
+        var ourQuadrant = this.getQuadrant(this.head);
+        var remainingQuadrants = [0, 1, 2, 3].filter(function (x) { return x != ourQuadrant && x != foodQuadrant; });
+        var targetIndex = Math.floor(Math.random() * remainingQuadrants.length);
+        var targetQuadrant = remainingQuadrants[targetIndex];
+        return this.getQuadrantPoint(targetQuadrant);
+    };
+    Board.prototype.shouldNotFood = function () {
+        var destination = this.getOtherQuadrant();
+        var dNode = this.astarBoard.grid[destination.x][destination.y];
+        var notFoodDirections = javascript_astar_master_1.astar.search(this.astarBoard, this.getHeadNode(), dNode);
+        return this.getOldMove(notFoodDirections);
+    };
     Board.prototype.getNextMove = function () {
         var food = this.getFoodNode();
         var head = this.getHeadNode();
         var enemy = this.getEnemyHead();
-        var ourDirections = javascript_astar_1.astar.search(this.astarBoard, head, food);
+        var ourDirections = javascript_astar_master_1.astar.search(this.astarBoard, head, food);
         var theirDirections = [];
         if (enemy) {
-            theirDirections = javascript_astar_1.astar.search(this.astarBoard, enemy, food);
+            theirDirections = javascript_astar_master_1.astar.search(this.astarBoard, enemy, food);
         }
         if (this.areWeCloser(ourDirections, theirDirections)) {
             var newPath = this.shouldWeLoop(ourDirections, theirDirections);
@@ -291,8 +336,7 @@ var Board = (function () {
             return this.getOldMove(ourDirections);
         }
         else {
-            console.log("ShouldNotFood");
-            return this.getOldMove(ourDirections);
+            return this.shouldNotFood();
         }
     };
     Board.prototype.getEmptyLeftOrRight = function () {
@@ -393,13 +437,13 @@ var Board = (function () {
         }
         var head = this.getHeadNode();
         if (!theirDirections.length) {
-            return javascript_astar_1.astar.search(this.astarBoard, head, this.getFoodNode());
+            return javascript_astar_master_1.astar.search(this.astarBoard, head, this.getFoodNode());
         }
         var theirShortPath = this.getGridEntryPoint(theirDirections);
         // this.updateAStarBoard(true);
         //this.astarBoard.grid[food.x][food.y].weight = 0; 
         var theirEntryPoint = theirShortPath[theirShortPath.length - 1];
-        return javascript_astar_1.astar.search(this.astarBoard, head, theirEntryPoint);
+        return javascript_astar_master_1.astar.search(this.astarBoard, head, theirEntryPoint);
     };
     Board.prototype.getGridEntryPoint = function (theirAStarPath) {
         var lastItem = theirAStarPath.length - 2; // because we don't care about food.
@@ -416,6 +460,9 @@ var Board = (function () {
         return Math.abs(food.x - target.x) <= 1 && Math.abs(food.y - target.y) <= 1;
     };
     Board.prototype.areWeCloser = function (us, them) {
+        if (this.otherSnake && this.otherSnake.health_points > this.health_points) {
+            return true;
+        }
         if (!them.length) {
             return true;
         }

@@ -2,6 +2,7 @@
   "host": "localhost",
   "port": 9001,
   "loopingLength":6,
+  "planningDistance":5,
   "routes": {
     "info": "/",
     "start": "/start",
