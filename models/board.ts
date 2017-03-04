@@ -1,5 +1,5 @@
 import { MoveContent, BoardCell, Directions, BoardCellContent } from "../utilities/utilities";
-import { astar, Graph } from "javascript-astar-master";
+import { astar, Graph } from "../javascript-astar-master";
 export interface Point {
     x: number;
     y: number;

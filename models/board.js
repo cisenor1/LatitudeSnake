@@ -1,6 +1,6 @@
 "use strict";
 var utilities_1 = require("../utilities/utilities");
-var javascript_astar_master_1 = require("javascript-astar-master");
+var javascript_astar_master_1 = require("../javascript-astar-master");
 var Board = (function () {
     function Board(height, width, loopingLength, planningNumber, numberOfSquares) {
         this.turn = 0;
