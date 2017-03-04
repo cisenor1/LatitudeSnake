@@ -77,4 +77,3 @@ router.post(config.routes.end, function (req, res) {
     return;
 });
 module.exports = router;
-//# sourceMappingURL=index.js.map

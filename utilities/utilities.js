@@ -49,4 +49,3 @@ BoardCellContent.FOOD = "food";
 BoardCellContent.EMPTY = "empty";
 BoardCellContent.WALL = "wall";
 exports.BoardCellContent = BoardCellContent;
-//# sourceMappingURL=utilities.js.map

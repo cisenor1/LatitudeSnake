@@ -4,4 +4,3 @@ function getMove(board, body) {
     return board.getNextMove();
 }
 exports.getMove = getMove;
-//# sourceMappingURL=move.js.map
