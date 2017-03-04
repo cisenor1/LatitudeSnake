@@ -11,11 +11,9 @@
     "end": "/end"
   },
   "snake": {
-    "name": "Cascadia Megathrust",
+    "name": "Latitude Snake",
     "color": "#389142",
     "head_url": "http://bbsimg.ngfiles.com/1/6337000/ngbbs4318b9e025d7b.gif",
-    "head_type": "bendr",
-    "tail_type": "round-bum",
     "taunt": {
       "state": "This is latitude's state.",
       "move": {
@@ -26,6 +24,8 @@
       },
       "start": "Latitude is starting.",
       "end": "Latitude is dead."
-    }
+    },
+    "head_type": "bendr",
+    "tail_type": "pixel"
   }
 }
