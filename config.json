@@ -11,13 +11,13 @@
     "end": "/end"
   },
   "snake": {
-    "name": "Latitude Snake",
+    "name": "Cascadia Megathrust",
     "color": "#389142",
     "head_url": "http://bbsimg.ngfiles.com/1/6337000/ngbbs4318b9e025d7b.gif",
     "taunt": {
       "state": "This is latitude's state.",
       "move": {
-        "0": "Let's do this!",
+        "0": "This is fight night and I am the king.",
         "100": "Made it to 100.",
         "250": "Made it to 250",
         "500": "Wow! Over 500"
