@@ -10,7 +10,9 @@ router.get(config.routes.info, function (req, res) {
   // Response data 
   var data = {
     color: config.snake.color,
-    head_url: config.snake.head_url
+    head_url: config.snake.head_url,
+    head_type: config.snake.head_type,
+    tail_type: config.snake.tail_type
   };
   return res.json(data);
 });

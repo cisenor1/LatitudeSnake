@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var config = require('./config.json');
 var logger = require('morgan');
 var express = require('express');

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var utilities_1 = require("../utilities/utilities");
 var javascript_astar_master_1 = require("../javascript-astar-master");
 var Board = (function () {
@@ -282,12 +283,14 @@ var Board = (function () {
     Board.prototype.getQuadrant = function (point) {
         var quadrant = 0;
         if (point.x < this.width / 2) {
+            // left
         }
         else {
             //right
             quadrant++;
         }
         if (point.y < this.height / 2) {
+            //up
         }
         else {
             //down
@@ -539,6 +542,12 @@ var Board = (function () {
     Board.prototype.getOldMove = function (ourDirections) {
         var nextSpot = ourDirections[0];
         if (!nextSpot) {
+            // Stall method extremely unlikely.
+            // let secondTryDir = this.findClearNeighbor();
+            // if (!secondTryDir) {
+            //     return Directions.DOWN;
+            // }
+            // return secondTryDir;
         }
         var move = this.getDirectionFromGridElement(nextSpot);
         return move;
