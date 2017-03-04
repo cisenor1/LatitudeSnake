@@ -1,7 +1,7 @@
 {
   "host": "localhost",
   "port": 9001,
-  "loopingLength":100,
+  "loopingLength":6,
   "planningDistance":5,
   "numberOfSquaresToLoop": 6,
   "routes": {
